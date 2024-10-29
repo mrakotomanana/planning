@@ -1,0 +1,38 @@
+{
+  "name": "planning",
+  "version": "1.0.0",
+  "description": "planning",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/mrakotomanana/planning.git"
+  },
+  "keywords": [
+    "html",
+    "js",
+    "css"
+  ],
+  "author": "Michel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mrakotomanana/planning/issues"
+  },
+  "homepage": "https://github.com/mrakotomanana/planning#readme",
+  "dependencies": {
+    "cookie-session": "^2.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "maskdata": "^1.3.3",
+    "morgan": "^1.10.0",
+    "pug": "^3.0.3",
+    "route-list": "^1.3.4",
+    "socket.io": "^4.8.1"
+  }
+}

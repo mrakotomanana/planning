@@ -1,0 +1,27 @@
+[
+    {
+      "id": 1,
+      "name": "John Smith",
+      "country": "United States",
+      "genres": ["Pop", "Rock"]
+    },
+    {
+      "id": 2,
+      "name": "Maria Garcia",
+      "country": "Spain",
+      "genres": ["Flamenco", "Latin"]
+    },
+    {
+      "id": 3,
+      "name": "David Kim",
+      "country": "South Korea",
+      "genres": ["K-Pop", "Hip-Hop"]
+    },
+    {
+      "id": 4,
+      "name": "Marta Johnson",
+      "country": "Canada",
+      "genres": ["Country", "Folk"]
+    }
+  ]
+  

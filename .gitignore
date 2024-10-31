@@ -1,1 +1,6 @@
 **/node_modules
+
+# ajouter .env dans .gitignore
+# Vérifier que .env est ignoré : Si vous avez déjà ajouté votre fichier .env à Git par accident, vous devrez d'abord le supprimer de # l'index Git. Utilisez cette commande pour cela 
+# git rm --cached .env
+.env

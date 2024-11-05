@@ -1,7 +1,8 @@
 import express from 'express';
 const routerAPP = express.Router();
 
-import artistesRoutes from './artistes.mjs';
+import artistesRoutes from './artistsRoutes.mjs';
+routerAPP.use(express.json());
 
 /* afaka atao tsirairai
 const songRoutes = require("./song");

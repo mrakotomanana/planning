@@ -1,13 +1,13 @@
-const artistService = require('../services/artist');
+import { findAllService, findService, createService, updateService, removeService } from '../services/artistService.mjs';
 
 function list(req, res) {
-  const artists = artistService.findAll();
+  const artists = findAllService();
   res.status(200).json(artists);
 }
 
 function read(req, res) {
   const artistId = req.params.id;
-  const artist = artistService.find(artistId);
+  const artist = findService(artistId);
   if (artist)
     res.status(200).json(artist);
   else
@@ -16,7 +16,7 @@ function read(req, res) {
 
 function create(req, res) {
   const datas = req.body;
-  const createdArtist = artistService.create(datas);
+  const createdArtist = createService(datas);
   if (createdArtist)
     res.status(201).json({ message: "Artiste créé" });
   else
@@ -26,7 +26,7 @@ function create(req, res) {
 function update(req, res) {
   const artistId = req.params.id;
   const datas = req.body;
-  const updatedArtist = artistService.update(artistId, datas);
+  const updatedArtist = updateService(artistId, datas);
   if (updatedArtist) {
     res.status(200).json({ message: "Artiste édité" });
   } else {
@@ -36,7 +36,7 @@ function update(req, res) {
 
 function remove(req, res) {
   const artistId = req.params.id;
-  const removedArtist = artistService.remove(artistId);
+  const removedArtist = removeService(artistId);
   if (removedArtist) {
     res.status(200).json({ message: "Artiste supprimé" });
   } else {
@@ -44,7 +44,7 @@ function remove(req, res) {
   }
 }
 
-exports = {
+export {
   list,
   read,
   create,

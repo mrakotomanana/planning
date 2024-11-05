@@ -1,0 +1,32 @@
+ if (Buffer.isBuffer(message)) {
+            // Traitez le message Buffer
+            console.log('Received a Buffer message:', message);
+            // Vous pouvez le convertir en chaîne si nécessaire
+            const decodedMessage = message.toString(); // Décode le Buffer en chaîne
+            console.log('Decoded message:', decodedMessage);
+            ws.send(decodedMessage);
+        } else {
+            // Si ce n'est pas un Buffer, traitez-le comme une chaîne
+            // console.log('Received a string message:', message);
+            // ws.send(message);
+            console.log(typeof message);
+
+            const data = JSON.parse(message);
+
+            if (data.type === 'identify') {
+                ws.username = data.username || `User_${Math.floor(Math.random() * 1000)}`;
+                console.log(`Client identifié avec le nom : ${ws.username}`);
+            } else {
+                // Diffuser le message avec le nom d'utilisateur
+                wss.clients.forEach((client) => {
+                    if (client.readyState === ws.OPEN) {
+                        client.send(`${ws.username}: ${data.message}`);
+                    }
+                });
+            }
+        }
+        //     wss.clients.forEach((client) => {
+        //         if (client.readyState === ws.OPEN) {
+        //             client.send(message.toString());
+        //         }
+        //     });

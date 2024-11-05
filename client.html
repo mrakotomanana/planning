@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+</head>
+
+<body>
+    <h1>WebSocket Client Test</h1>
+    <button id="sendMessage">Send Message</button>
+    <div id="messages"></div>
+
+    <script>
+        // Initialiser la connexion WebSocket
+        const socket = new WebSocket('ws://localhost:8081/chat');
+        socket.onopen = () => {
+            console.log('Connected to WebSocket server');
+            // Envoyer un message de test au serveur
+            socket.send('Hello from the WebSocket client!');
+        };
+
+        socket.onmessage = (event) => {
+            console.log('Message from server:', event.data);
+            document.getElementById('messages').innerHTML += `<p>${event.data}</p>`;
+        };
+
+        socket.onclose = () => {
+            console.log('Disconnected from WebSocket server');
+        };
+
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        document.getElementById('sendMessage').addEventListener('click', () => {
+            const message = 'Hello! This is a message from the client.';
+            socket.send(message);
+        });
+    </script>
+</body>
+
+</html>

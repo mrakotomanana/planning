@@ -59,7 +59,7 @@ wss.on('connection', (ws) => {
         console.log(`Client connecté avec ID : ${ws.id}`);
         wss.clients.forEach((client) => {
             if (client.readyState === ws.OPEN) {
-                client.send(`${ws.id} : ${message}`);
+                client.send(`${ws.id} : ${message} ||| ${ws._socket.remotePort}`);
             }
         });
     });

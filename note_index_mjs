@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA avec Fichiers Externes</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    
+        <div class="topnav">
+            <a href="#home" onclick="navigate('home')">Accueil</a>
+            <a href="#about" onclick="navigate('about')">À propos</a>
+            <a href="#contact" onclick="navigate('contact')">Contact</a>
+            <a href="#users" onclick="navigate('users')">Utilisateurs</a> <!-- API users -->
+        </div>
+    
+
+    <div id="container">
+        <!-- Le contenu des autres pages sera chargé ici -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+const express = require('express');
+const http = require('http');
+const session = require('express-session');
+const WebSocket = require('ws');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const path = require('path'); // Ajoutez cette ligne
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Configuration des sessions
+app.use(
+  session({
+    secret: 'votre_secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
+
+// Dictionnaire pour les utilisateurs (à remplacer par une base de données)
+// const users = {
+//     testuser: { password: await bcrypt.hash("testpassword", 10) }
+//   };
+
+const users = {}
+// Exemple d'enregistrement d'utilisateur avec un mot de passe crypté
+const username = 'testuser';
+const password = 'testpassword';
+
+// Hachage du mot de passe avant de l'enregistrer
+// bcrypt.hash(password, 10, (err, hashedPassword) => {
+//   if (err) throw err;
+//   users[username] = { password: hashedPassword };
+//   console.log('Utilisateur enregistré avec succès');
+// });
+
+bcrypt.hash(password, 10).then(hash => {
+    users[username] = { password: hash };
+    console.log('Mot de passe chiffré:', hash);
+}).catch(err => console.error(err));
+
+// Fonction d'authentification
+const authenticate = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(403).json({ message: 'Token manquant' });
+
+  jwt.verify(token, 'votre_secret_jwt', (err, user) => {
+    if (err) return res.status(403).json({ message: 'Token invalide' });
+    req.user = user;
+    next();
+  });
+};
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+// Inscription d'un utilisateur
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+  if (users[username]) return res.status(400).json({ message: 'Utilisateur existant' });
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  users[username] = { password: hashedPassword };
+  res.status(200).json({ message: 'Utilisateur enregistré' });
+});
+
+// Connexion de l'utilisateur
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = users[username];
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(403).json({ message: `Nom d'utilisateur ou mot de passe incorrect` });
+  }
+
+  const token = jwt.sign({ username }, 'votre_secret_jwt', { expiresIn: '1h' });
+  res.json({ token });
+});
+
+// Stockage des connexions WebSocket
+const clients = {};
+
+// Connexion WebSocket avec authentification JWT
+wss.on('connection', (ws, req) => {
+  const token = req.url.split('token=')[1];
+  if (!token) return ws.close();
+
+  jwt.verify(token, 'votre_secret_jwt', (err, user) => {
+    if (err) return ws.close();
+
+    ws.username = user.username;
+    clients[user.username] = ws;
+
+    // Gestion des messages reçus
+    ws.on('message', (message) => {
+      const data = JSON.parse(message);
+      const { recipient, content } = data;
+      console.log(ws.username, content);
+      
+
+      // Envoi du message au destinataire
+      if (clients[recipient]) {
+        clients[recipient].send(JSON.stringify({ sender: ws.username, content }));
+      }
+      ws.send(JSON.stringify({ sender: ws.username, content }));
+    });
+
+    ws.on('close', () => {
+      delete clients[ws.username];
+    });
+  });
+});
+
+server.listen(3000, () => {
+  console.log('Serveur lancé sur le port 3000');
+});
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .chat-container { display: flex; height: 80vh; width: 80vw; margin: 0 auto; }
+    .users-list { width: 20%; border-right: 1px solid #ccc; }
+    .chat-window { flex: 1; display: flex; flex-direction: column; }
+    .messages { flex: 1; overflow-y: auto; padding: 10px; }
+    .message { padding: 5px 10px; margin: 5px 0; border-radius: 5px; }
+    .message.me { background-color: #DCF8C6; align-self: flex-end; }
+    .message.other { background-color: #EAEAEA; align-self: flex-start; }
+    .input-area { display: flex; }
+    .input-area input { flex: 1; padding: 10px; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="users-list">
+      <!-- Liste des utilisateurs -->
+    </div>
+    <div class="chat-window">
+      <div class="messages" id="messages"></div>
+      <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Tapez votre message..."/>
+        <button onclick="sendMessage()">Envoyer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ws;
+    let token;
+
+    function authenticate() {
+      fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'testuser', password: 'testpassword' })
+      })
+      .then(res => res.json())
+      .then(data => {
+        token = data.token;
+        ws = new WebSocket(`ws://localhost:3000?token=${token}`);
+        ws.onmessage = (event) => displayMessage(JSON.parse(event.data));
+      });
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value;
+      input.value = '';
+      ws.send(JSON.stringify({ recipient: 'destinataire', content: message }));
+      // displayMessage({ sender: 'Me', content: message });
+    }
+
+    function displayMessage({ sender, content }) {
+      const messagesDiv = document.getElementById('messages');
+      console.log(sender);
+      const messageElem = document.createElement('div');
+      messageElem.className = sender === 'Me' ? 'message me' : 'message other';
+      messageElem.innerText = `${sender}: ${content}`;
+      messagesDiv.appendChild(messageElem);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    authenticate();
+  </script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Chat App - Login</title>
+</head>
+
+<body>
+  <h2>Inscription</h2>
+  <form id="registerForm">
+    <input type="text" id="registerUsername" placeholder="Nom d'utilisateur" required>
+    <input type="password" id="registerPassword" placeholder="Mot de passe" required>
+    <button type="submit">S'inscrire</button>
+  </form>
+
+  <h2>Connexion</h2>
+  <form id="loginForm">
+    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" required>
+    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+    <button type="submit">Se connecter</button>
+  </form>
+
+  <script>
+    // Inscription
+    document.getElementById('registerForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const username = document.getElementById('registerUsername').value;
+      const password = document.getElementById('registerPassword').value;
+
+      const response = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (response.ok) {
+        alert('Inscription réussie ! Vous pouvez vous connecter.');
+      } else {
+        alert('Erreur lors de l\'inscription.');
+      }
+    });
+
+    // Connexion
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+      if (data.token) {
+        localStorage.setItem('token', data.token);  // Sauvegarder le token
+        window.location.href = '/chat.html';        // Rediriger vers la page de chat
+      } else {
+        alert('Erreur de connexion.');
+      }
+    });
+  </script>
+</body>
+
+</html>

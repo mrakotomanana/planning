@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion</title>
+</head>
+
+<body>
+    <h2>Connexion</h2>
+    <form id="loginForm">
+        <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" required>
+        <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+        <button type="submit">Se connecter</button>
+    </form>
+
+    <script>
+        // Connexion
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (data.token) {
+                localStorage.setItem('token', data.token);  // Sauvegarder le token
+                window.location.href = './chat.html';        // Rediriger vers la page de chat
+            } else {
+                console.error('Erreur de connexion.');
+                alert('Nom d\'utilisateur ou mot de passe incorrect. Redirection vers l\'inscription...');
+                window.location.href = '/inscrire.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription</title>
+</head>
+
+<body>
+    <h2>Inscription</h2>
+    <form id="registerForm">
+        <input type="text" id="registerUsername" placeholder="Nom d'utilisateur" required>
+        <input type="password" id="registerPassword" placeholder="Mot de passe" required>
+        <button type="submit">S'inscrire</button>
+    </form>
+
+    <script>
+        // Inscription
+        document.getElementById('registerForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            console.log(response);
+
+            if (response.ok) {
+                alert('Inscription réussie ! Vous pouvez vous connecter.');
+                localStorage.setItem('user', JSON.stringify({ username, password }));
+                window.location.href = '/chat.html';
+            }  else if (response.status == 400) {
+                alert(response.text);
+                localStorage.setItem('user', JSON.stringify({ username, password }));
+                window.location.href = '/connection.html';
+            } else {
+                alert('Erreur lors de l\'inscription.');
+            }
+        });
+    </script>
+</body>
+
+</html>
